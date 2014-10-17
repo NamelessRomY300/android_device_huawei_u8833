@@ -1,18 +1,22 @@
-From 673a79581f483ce77ede31f7f6ac6bd1fbd3e21d Mon Sep 17 00:00:00 2001
-From: Kyle Harrison <khwebmail@gmail.com>
-Date: Sun, 12 Jan 2014 22:48:24 +0000
+From 6abc8c4ee633122137a461e5cf5bc0d54bd18f1c Mon Sep 17 00:00:00 2001
+From: Daz Jones <yuki@thebronasium.com>
+Date: Thu, 10 Oct 2013 22:01:18 +0100
 Subject: [PATCH] Update Huawei SoftapControllerATH for 4.4 (and 4.3)
 
+Original Huaweifying by Kra1o5
+'Revival' of SoftapControllerATH by grigorig
+
+Change-Id: I62983bd2923398a6511296341ea34b64dac05998
 ---
  Android.mk              |  11 +-
- CommandListener.cpp     |  11 +-
+ CommandListener.cpp     |   9 +
  SoftapController.h      |   8 +
  SoftapControllerATH.cpp | 816 ++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 844 insertions(+), 2 deletions(-)
+ 4 files changed, 843 insertions(+), 1 deletion(-)
  create mode 100644 SoftapControllerATH.cpp
 
 diff --git a/Android.mk b/Android.mk
-index da4a7ad..db511e9 100644
+index 9c383d0..e0dadc6 100644
 --- a/Android.mk
 +++ b/Android.mk
 @@ -19,7 +19,6 @@ LOCAL_SRC_FILES:=                                      \
@@ -23,7 +27,7 @@ index da4a7ad..db511e9 100644
                    TetherController.cpp                 \
                    oem_iptables_hook.cpp                \
                    UidMarkMap.cpp                       \
-@@ -42,6 +41,16 @@ LOCAL_SHARED_LIBRARIES := libstlport libsysutils liblog libcutils libnetutils \
+@@ -46,6 +45,16 @@ LOCAL_SHARED_LIBRARIES := libstlport libsysutils liblog libcutils libnetutils \
                            libcrypto libhardware_legacy libmdnssd libdl \
                            liblogwrap
  
@@ -34,22 +38,20 @@ index da4a7ad..db511e9 100644
 +  LOCAL_SRC_FILES += SoftapControllerATH.cpp
 +  LOCAL_SHARED_LIBRARIES := $(LOCAL_SHARED_LIBRARIES) libwpa_client
 +else
-+   LOCAL_SRC_FILES += SoftapController.cpp
++  LOCAL_SRC_FILES += SoftapController.cpp
 +endif
 +
- include $(BUILD_EXECUTABLE)
- 
- include $(CLEAR_VARS)
+ ifneq ($(BOARD_HOSTAPD_DRIVER),)
+   LOCAL_CFLAGS += -DHAVE_HOSTAPD
+   ifneq ($(BOARD_HOSTAPD_DRIVER_NAME),)
 diff --git a/CommandListener.cpp b/CommandListener.cpp
-index 16c9e13..0b9fdbb 100644
+index 52024de..9c1579e 100644
 --- a/CommandListener.cpp
 +++ b/CommandListener.cpp
-@@ -992,9 +992,18 @@ int CommandListener::SoftapCmd::runCommand(SocketClient *cli,
-                      "Missing argument in a SoftAP command", false);
+@@ -1062,8 +1062,17 @@ int CommandListener::SoftapCmd::runCommand(SocketClient *cli,
          return 0;
      }
--
-+    
+ 
 +#ifdef ATH_WLAN
 +    if (!strcmp(argv[1], "start")) {
 +        rc = sSoftapCtrl->startDriver(argv[2]);
@@ -91,7 +93,7 @@ index 7063067..b520fca 100644
  };
 diff --git a/SoftapControllerATH.cpp b/SoftapControllerATH.cpp
 new file mode 100644
-index 0000000..041f9ec
+index 0000000..3d9316b
 --- /dev/null
 +++ b/SoftapControllerATH.cpp
 @@ -0,0 +1,816 @@
@@ -910,7 +912,7 @@ index 0000000..041f9ec
 +    }
 +    ALOGD("Softap fwReload - Ok");
 +    return ResponseCode::SoftapStatusResult;
-+} 
++}
 -- 
-1.8.5.2
+1.9.1
 
